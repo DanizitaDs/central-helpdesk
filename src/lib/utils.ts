@@ -48,31 +48,51 @@ export function formatDateTime(dateString: string): string {
   });
 }
 
-// Status labels
+// Status labels - support both English and Portuguese values from API
 export const statusLabels: Record<string, string> = {
   open: 'Aberto',
   in_progress: 'Em Andamento',
   resolved: 'Resolvido',
   closed: 'Fechado',
   all: 'Todos',
+  // Portuguese values from API
+  'Aberto': 'Aberto',
+  'Em Andamento': 'Em Andamento',
+  'Resolvido': 'Resolvido',
+  'Fechado': 'Fechado',
 };
 
-// Priority labels
+// Priority labels - support both English and Portuguese values from API
 export const priorityLabels: Record<string, string> = {
   low: 'Baixa',
   medium: 'Média',
   high: 'Alta',
   critical: 'Crítica',
   all: 'Todas',
+  // Portuguese values from API
+  'Baixa': 'Baixa',
+  'Média': 'Média',
+  'Alta': 'Alta',
+  'Crítica': 'Crítica',
 };
 
-// Category labels
+// Category labels - support various values from API
 export const categoryLabels: Record<string, string> = {
   bug: 'Bug',
   feature: 'Funcionalidade',
   support: 'Suporte',
   question: 'Dúvida',
   other: 'Outro',
+  // Portuguese/custom values from API
+  'Bug': 'Bug',
+  'Funcionalidade': 'Funcionalidade',
+  'Suporte': 'Suporte',
+  'Dúvida': 'Dúvida',
+  'Outro': 'Outro',
+  'Acesso': 'Acesso',
+  'Hardware': 'Hardware',
+  'Software': 'Software',
+  'Rede': 'Rede',
 };
 
 // Validation helpers
