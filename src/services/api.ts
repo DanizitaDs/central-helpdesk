@@ -3,52 +3,10 @@ import {
   TicketCreateInput, 
   TicketUpdateInput, 
   PaginatedResponse, 
-  TicketFilters,
-  TicketStatus,
-  TicketPriority,
-  TicketCategory
+  TicketFilters
 } from '@/types/ticket';
 
-// Mock data for demonstration
-const generateMockTickets = (): Ticket[] => {
-  const statuses: TicketStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
-  const priorities: TicketPriority[] = ['low', 'medium', 'high', 'critical'];
-  const categories: TicketCategory[] = ['bug', 'feature', 'support', 'question', 'other'];
-  
-  const titles = [
-    'Login não funciona após atualização',
-    'Adicionar modo escuro ao dashboard',
-    'Erro ao exportar relatório PDF',
-    'Dúvida sobre integração com API',
-    'Botão de salvar não responde',
-    'Melhorar performance da busca',
-    'Problema com upload de imagens',
-    'Solicitar nova funcionalidade de filtros',
-    'Erro 500 ao acessar perfil',
-    'Atualizar documentação da API',
-    'Notificações não chegam por email',
-    'Implementar autenticação 2FA',
-    'Bug no formulário de cadastro',
-    'Relatório de vendas incorreto',
-    'Adicionar suporte a múltiplos idiomas',
-  ];
-
-  return titles.map((title, index) => ({
-    id: `ticket-${index + 1}`,
-    title,
-    description: `Descrição detalhada do chamado: ${title}. Este é um texto de exemplo para demonstrar o sistema de helpdesk.`,
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    priority: priorities[Math.floor(Math.random() * priorities.length)],
-    category: categories[Math.floor(Math.random() * categories.length)],
-    createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-    updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-  }));
-};
-
-let mockTickets = generateMockTickets();
-
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const API_BASE_URL = 'https://x8ki-letl-twmt.n7.xano.io/api:KC4cuToL';
 
 // API Functions
 export const ticketApi = {
@@ -57,90 +15,155 @@ export const ticketApi = {
     limit: number = 10, 
     filters?: TicketFilters
   ): Promise<PaginatedResponse<Ticket>> {
-    await delay(500); // Simulate network delay
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
     
-    let filtered = [...mockTickets];
-    
-    // Apply filters
     if (filters?.status && filters.status !== 'all') {
-      filtered = filtered.filter(t => t.status === filters.status);
+      params.append('status', filters.status);
     }
     
     if (filters?.priority && filters.priority !== 'all') {
-      filtered = filtered.filter(t => t.priority === filters.priority);
+      params.append('priority', filters.priority);
     }
     
     if (filters?.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(t => 
-        t.title.toLowerCase().includes(searchLower) ||
-        t.description.toLowerCase().includes(searchLower)
-      );
+      params.append('search', filters.search);
     }
     
-    // Sort by date (newest first)
-    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const response = await fetch(`${API_BASE_URL}/tickets?${params.toString()}`);
     
-    // Paginate
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / limit);
-    const start = (page - 1) * limit;
-    const data = filtered.slice(start, start + limit);
+    if (!response.ok) {
+      throw new Error('Erro ao carregar chamados');
+    }
     
+    const data = await response.json();
+    
+    // Handle both paginated response and array response from Xano
+    if (Array.isArray(data)) {
+      // If API returns array, handle pagination client-side
+      let filtered = [...data];
+      
+      // Apply client-side filters if API doesn't support them
+      if (filters?.status && filters.status !== 'all') {
+        filtered = filtered.filter(t => t.status === filters.status);
+      }
+      
+      if (filters?.priority && filters.priority !== 'all') {
+        filtered = filtered.filter(t => t.priority === filters.priority);
+      }
+      
+      if (filters?.search) {
+        const searchLower = filters.search.toLowerCase();
+        filtered = filtered.filter(t => 
+          t.title?.toLowerCase().includes(searchLower) ||
+          t.description?.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      const total = filtered.length;
+      const totalPages = Math.ceil(total / limit);
+      const start = (page - 1) * limit;
+      const paginatedData = filtered.slice(start, start + limit);
+      
+      return {
+        data: paginatedData.map(normalizeTicket),
+        total,
+        page,
+        limit,
+        totalPages,
+      };
+    }
+    
+    // If API returns paginated object
     return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
+      data: (data.items || data.data || []).map(normalizeTicket),
+      total: data.total || data.itemsTotal || 0,
+      page: data.page || page,
+      limit: data.limit || data.perPage || limit,
+      totalPages: data.totalPages || data.pageTotal || 1,
     };
   },
 
   async getById(id: string): Promise<Ticket | null> {
-    await delay(300);
-    return mockTickets.find(t => t.id === id) || null;
+    const response = await fetch(`${API_BASE_URL}/tickets/${id}`);
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Erro ao carregar chamado');
+    }
+    
+    const data = await response.json();
+    return normalizeTicket(data);
   },
 
   async create(input: TicketCreateInput): Promise<Ticket> {
-    await delay(400);
+    const response = await fetch(`${API_BASE_URL}/tickets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: input.title,
+        description: input.description,
+        status: input.status,
+        priority: input.priority,
+        category: input.category,
+      }),
+    });
     
-    const newTicket: Ticket = {
-      id: `ticket-${Date.now()}`,
-      ...input,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    if (!response.ok) {
+      throw new Error('Erro ao criar chamado');
+    }
     
-    mockTickets = [newTicket, ...mockTickets];
-    return newTicket;
+    const data = await response.json();
+    return normalizeTicket(data);
   },
 
   async update(input: TicketUpdateInput): Promise<Ticket> {
-    await delay(400);
+    const response = await fetch(`${API_BASE_URL}/tickets/${input.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: input.id,
+        status: input.status,
+        priority: input.priority,
+      }),
+    });
     
-    const index = mockTickets.findIndex(t => t.id === input.id);
-    if (index === -1) {
-      throw new Error('Chamado não encontrado');
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar chamado');
     }
     
-    mockTickets[index] = {
-      ...mockTickets[index],
-      status: input.status,
-      priority: input.priority,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    return mockTickets[index];
+    const data = await response.json();
+    return normalizeTicket(data);
   },
 
   async delete(id: string): Promise<void> {
-    await delay(300);
+    const response = await fetch(`${API_BASE_URL}/tickets/${id}`, {
+      method: 'DELETE',
+    });
     
-    const index = mockTickets.findIndex(t => t.id === id);
-    if (index === -1) {
-      throw new Error('Chamado não encontrado');
+    if (!response.ok) {
+      throw new Error('Erro ao excluir chamado');
     }
-    
-    mockTickets = mockTickets.filter(t => t.id !== id);
   },
 };
+
+// Normalize ticket data from API to match our Ticket type
+function normalizeTicket(data: any): Ticket {
+  return {
+    id: String(data.id),
+    title: data.title || '',
+    description: data.description || '',
+    status: data.status || 'open',
+    priority: data.priority || 'medium',
+    category: data.category || 'other',
+    createdAt: data.createdAt || data.created_at || new Date().toISOString(),
+    updatedAt: data.updatedAt || data.updated_at || new Date().toISOString(),
+  };
+}
