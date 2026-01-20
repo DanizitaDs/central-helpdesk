@@ -79,17 +79,24 @@ export const categoryLabels: Record<string, string> = {
   'Rede': 'Rede',
 };
 
-// Validation helpers
-export function validateTitle(title: string): string | null {
+// Validation helpers with dynamic limits
+export function validateTitle(title: string, limits?: { min: number; max: number }): string | null {
+  const min = limits?.min ?? 5;
+  const max = limits?.max ?? 80;
+  
   if (!title.trim()) return 'O título é obrigatório';
-  if (title.length < 5) return 'O título deve ter no mínimo 5 caracteres';
-  if (title.length > 80) return 'O título deve ter no máximo 80 caracteres';
+  if (title.length < min) return `O título deve ter no mínimo ${min} caracteres`;
+  if (title.length > max) return `O título deve ter no máximo ${max} caracteres`;
   return null;
 }
 
-export function validateDescription(description: string): string | null {
+export function validateDescription(description: string, limits?: { min: number; max: number }): string | null {
+  const min = limits?.min ?? 0;
+  const max = limits?.max ?? 2000;
+  
   if (!description.trim()) return 'A descrição é obrigatória';
-  if (description.length > 2000) return 'A descrição deve ter no máximo 2000 caracteres';
+  if (min > 0 && description.length < min) return `A descrição deve ter no mínimo ${min} caracteres`;
+  if (description.length > max) return `A descrição deve ter no máximo ${max} caracteres`;
   return null;
 }
 
