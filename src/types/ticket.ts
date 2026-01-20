@@ -44,9 +44,4 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-export interface TicketFilters {
-  status?: TicketStatus[] | 'all';
-  priority?: TicketPriority | 'all';
-  search?: string;
-  sortOrder?: 'newest' | 'oldest';
-}
+export interface TicketFilters { status?: TicketStatus | 'all'; priority?: TicketPriority | 'all'; search?: string; sortOrder?: 'newest' | 'oldest'; }
