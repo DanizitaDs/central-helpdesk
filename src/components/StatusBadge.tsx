@@ -1,5 +1,6 @@
 import { TicketStatus } from '@/types/ticket';
 import { statusLabels, cn } from '@/lib/utils';
+import { Circle, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: TicketStatus | string | null | undefined;
@@ -7,50 +8,34 @@ interface StatusBadgeProps {
 }
 
 const statusStyles: Record<string, string> = {
-  open: 'bg-status-open-bg text-status-open',
-  in_progress: 'bg-status-in-progress-bg text-status-in-progress',
-  resolved: 'bg-status-resolved-bg text-status-resolved',
-  closed: 'bg-status-closed-bg text-status-closed',
-  // Portuguese values
-  'Aberto': 'bg-status-open-bg text-status-open',
-  'Em Andamento': 'bg-status-in-progress-bg text-status-in-progress',
-  'Resolvido': 'bg-status-resolved-bg text-status-resolved',
-  'Fechado': 'bg-status-closed-bg text-status-closed',
+  'Aberto': 'bg-status-open-bg text-status-open border-status-open/30',
+  'Em Andamento': 'bg-status-in-progress-bg text-status-in-progress border-status-in-progress/30',
+  'Resolvido': 'bg-status-resolved-bg text-status-resolved border-status-resolved/30',
+  'Fechado': 'bg-status-closed-bg text-status-closed border-status-closed/30',
 };
 
-const statusDotStyles: Record<string, string> = {
-  open: 'bg-status-open',
-  in_progress: 'bg-status-in-progress',
-  resolved: 'bg-status-resolved',
-  closed: 'bg-status-closed',
-  // Portuguese values
-  'Aberto': 'bg-status-open',
-  'Em Andamento': 'bg-status-in-progress',
-  'Resolvido': 'bg-status-resolved',
-  'Fechado': 'bg-status-closed',
+const statusIcons: Record<string, React.ReactNode> = {
+  'Aberto': <Circle className="w-3 h-3" />,
+  'Em Andamento': <Clock className="w-3 h-3" />,
+  'Resolvido': <CheckCircle2 className="w-3 h-3" />,
+  'Fechado': <XCircle className="w-3 h-3" />,
 };
 
 export function StatusBadge({ status, size = 'md' }: StatusBadgeProps) {
-  const normalizedStatus = status || 'open';
-  const style = statusStyles[normalizedStatus] || statusStyles.open;
-  const dotStyle = statusDotStyles[normalizedStatus] || statusDotStyles.open;
+  const normalizedStatus = status || 'Aberto';
+  const style = statusStyles[normalizedStatus] || statusStyles['Aberto'];
+  const icon = statusIcons[normalizedStatus] || statusIcons['Aberto'];
   const label = statusLabels[normalizedStatus] || normalizedStatus;
 
   return (
     <span
       className={cn(
-        'inline-flex items-center font-medium rounded-full',
+        'inline-flex items-center gap-1.5 font-medium rounded-full border',
         style,
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm'
+        size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'
       )}
     >
-      <span
-        className={cn(
-          'rounded-full mr-1.5',
-          size === 'sm' ? 'w-1.5 h-1.5' : 'w-2 h-2',
-          dotStyle
-        )}
-      />
+      {icon}
       {label}
     </span>
   );

@@ -19,18 +19,6 @@ export const ticketApi = {
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
-    if (filters?.status && filters.status !== 'all') {
-      params.append('status', filters.status);
-    }
-    
-    if (filters?.priority && filters.priority !== 'all') {
-      params.append('priority', filters.priority);
-    }
-    
-    if (filters?.search) {
-      params.append('search', filters.search);
-    }
-    
     const response = await fetch(`${API_BASE_URL}/tickets?${params.toString()}`);
     
     if (!response.ok) {
@@ -41,10 +29,9 @@ export const ticketApi = {
     
     // Handle both paginated response and array response from Xano
     if (Array.isArray(data)) {
-      // If API returns array, handle pagination client-side
       let filtered = [...data];
       
-      // Apply client-side filters if API doesn't support them
+      // Apply client-side filters
       if (filters?.status && filters.status !== 'all') {
         filtered = filtered.filter(t => t.status === filters.status);
       }
@@ -53,12 +40,22 @@ export const ticketApi = {
         filtered = filtered.filter(t => t.priority === filters.priority);
       }
       
+      // Search by ID and title
       if (filters?.search) {
-        const searchLower = filters.search.toLowerCase();
+        const searchLower = filters.search.toLowerCase().trim();
         filtered = filtered.filter(t => 
-          t.title?.toLowerCase().includes(searchLower) ||
-          t.description?.toLowerCase().includes(searchLower)
+          String(t.id).includes(searchLower) ||
+          t.title?.toLowerCase().includes(searchLower)
         );
+      }
+      
+      // Sort by date
+      if (filters?.sortOrder) {
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.created_at || a.createdAt).getTime();
+          const dateB = new Date(b.created_at || b.createdAt).getTime();
+          return filters.sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+        });
       }
       
       const total = filtered.length;
@@ -111,6 +108,8 @@ export const ticketApi = {
         status: input.status,
         priority: input.priority,
         category: input.category,
+        requester_name: input.requester_name,
+        requester_email: input.requester_email,
       }),
     });
     
@@ -123,19 +122,25 @@ export const ticketApi = {
   },
 
   async update(input: TicketUpdateInput): Promise<Ticket> {
-    const response = await fetch(`${API_BASE_URL}/tickets/${input.id}`, {
+    const response = await fetch(`${API_BASE_URL}/tickets/${input.tickets_id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id: input.id,
-        status: input.status,
+        tickets_id: input.tickets_id,
+        title: input.title,
+        description: input.description,
+        category: input.category,
         priority: input.priority,
+        requester_name: input.requester_name,
+        requester_email: input.requester_email,
       }),
     });
     
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Update error:', errorData);
       throw new Error('Erro ao atualizar chamado');
     }
     
@@ -160,9 +165,11 @@ function normalizeTicket(data: any): Ticket {
     id: String(data.id),
     title: data.title || '',
     description: data.description || '',
-    status: data.status || 'open',
-    priority: data.priority || 'medium',
-    category: data.category || 'other',
+    status: data.status || 'Aberto',
+    priority: data.priority || 'Media',
+    category: data.category || '',
+    requester_name: data.requester_name || '',
+    requester_email: data.requester_email || '',
     createdAt: data.createdAt || data.created_at || new Date().toISOString(),
     updatedAt: data.updatedAt || data.updated_at || new Date().toISOString(),
   };

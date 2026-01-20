@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -60,6 +60,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        spotify: {
+          green: "hsl(141 76% 48%)",
+          black: "hsl(0 0% 0%)",
+          dark: "hsl(0 0% 7%)",
+          gray: "hsl(0 0% 18%)",
+          light: "hsl(0 0% 65%)",
+        },
         status: {
           open: "hsl(var(--status-open))",
           "open-bg": "hsl(var(--status-open-bg))",
@@ -95,15 +102,25 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "pulse-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 20px hsl(141 76% 48% / 0.4)",
+          },
+          "50%": { 
+            boxShadow: "0 0 40px hsl(141 76% 48% / 0.6)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
-        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07)',
-        'elevated': '0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08)',
+        'card': '0 4px 60px rgb(0 0 0 / 0.5)',
+        'card-hover': '0 8px 80px rgb(0 0 0 / 0.6)',
+        'elevated': '0 16px 100px rgb(0 0 0 / 0.7)',
+        'glow': '0 0 40px hsl(141 76% 48% / 0.3)',
       },
     },
   },

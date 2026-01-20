@@ -2,113 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    /* Spotify-inspired Light Mode (rarely used) */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 141 76% 48%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 210 40% 96%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 141 76% 48%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 141 76% 48%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Status Colors */
-    --status-open: 221 83% 53%;
-    --status-open-bg: 221 83% 96%;
+    --status-open: 217 91% 60%;
+    --status-open-bg: 217 91% 95%;
     --status-in-progress: 38 92% 50%;
-    --status-in-progress-bg: 38 92% 95%;
-    --status-resolved: 142 71% 45%;
-    --status-resolved-bg: 142 71% 95%;
-    --status-closed: 215 16% 47%;
-    --status-closed-bg: 215 16% 94%;
+    --status-in-progress-bg: 38 92% 94%;
+    --status-resolved: 141 76% 48%;
+    --status-resolved-bg: 141 76% 94%;
+    --status-closed: 0 0% 55%;
+    --status-closed-bg: 0 0% 92%;
 
     /* Priority Colors */
-    --priority-low: 142 71% 45%;
-    --priority-low-bg: 142 71% 95%;
+    --priority-low: 141 76% 48%;
+    --priority-low-bg: 141 76% 94%;
     --priority-medium: 38 92% 50%;
-    --priority-medium-bg: 38 92% 95%;
+    --priority-medium-bg: 38 92% 94%;
     --priority-high: 25 95% 53%;
-    --priority-high-bg: 25 95% 95%;
+    --priority-high-bg: 25 95% 94%;
     --priority-critical: 0 84% 60%;
-    --priority-critical-bg: 0 84% 96%;
+    --priority-critical-bg: 0 84% 95%;
 
-    /* Sidebar */
     --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 141 76% 48%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 141 76% 48%;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Spotify Dark Theme */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
 
-    --card: 222 47% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 141 76% 48%;
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 213 27% 84%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 141 76% 48%;
 
     /* Status Colors Dark */
-    --status-open: 221 83% 60%;
-    --status-open-bg: 221 83% 15%;
+    --status-open: 217 91% 65%;
+    --status-open-bg: 217 91% 15%;
     --status-in-progress: 38 92% 55%;
     --status-in-progress-bg: 38 92% 15%;
-    --status-resolved: 142 71% 50%;
-    --status-resolved-bg: 142 71% 15%;
-    --status-closed: 215 16% 55%;
-    --status-closed-bg: 215 16% 20%;
+    --status-resolved: 141 76% 52%;
+    --status-resolved-bg: 141 76% 12%;
+    --status-closed: 0 0% 60%;
+    --status-closed-bg: 0 0% 20%;
 
     /* Priority Colors Dark */
-    --priority-low: 142 71% 50%;
-    --priority-low-bg: 142 71% 15%;
+    --priority-low: 141 76% 52%;
+    --priority-low-bg: 141 76% 12%;
     --priority-medium: 38 92% 55%;
     --priority-medium-bg: 38 92% 15%;
     --priority-high: 25 95% 58%;
@@ -116,14 +117,14 @@
     --priority-critical: 0 84% 65%;
     --priority-critical-bg: 0 84% 15%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 141 76% 48%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 141 76% 48%;
   }
 }
 
@@ -134,7 +135,11 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+
+  html {
+    @apply dark;
   }
 }
 
@@ -149,6 +154,18 @@
 
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out;
+  }
+
+  .spotify-gradient {
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.3) 0%, hsl(var(--background)) 100%);
+  }
+
+  .spotify-card {
+    @apply bg-card hover:bg-muted/50 transition-all duration-300;
+  }
+
+  .glass-effect {
+    @apply bg-card/80 backdrop-blur-xl;
   }
 }
 
@@ -183,22 +200,35 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Spotify style */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 4px;
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Focus styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+}
+
+/* Selection */
+::selection {
+  @apply bg-primary/30 text-foreground;
 }
