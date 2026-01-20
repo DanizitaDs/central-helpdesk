@@ -4,6 +4,7 @@ export type TicketCategory = 'Acesso' | 'Hardware' | 'Software' | 'Rede' | 'Outr
 
 export interface Ticket {
   id: string;
+  tickets_id?: number;
   title: string;
   description: string;
   status: TicketStatus;
@@ -11,8 +12,8 @@ export interface Ticket {
   category: TicketCategory | string;
   requester_name?: string;
   requester_email?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface TicketCreateInput {

@@ -19,6 +19,21 @@ export const ticketApi = {
     params.append('page', page.toString());
     params.append('limit', limit.toString());
     
+    // Add search query parameter
+    if (filters?.search && filters.search.trim()) {
+      params.append('q', filters.search.trim());
+    }
+    
+    // Add status filter parameter
+    if (filters?.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    
+    // Add priority filter parameter
+    if (filters?.priority && filters.priority !== 'all') {
+      params.append('priority', filters.priority);
+    }
+    
     const response = await fetch(`${API_BASE_URL}/tickets?${params.toString()}`);
     
     if (!response.ok) {
@@ -31,24 +46,7 @@ export const ticketApi = {
     if (Array.isArray(data)) {
       let filtered = [...data];
       
-      // Apply client-side filters - filter ALL tickets of that status
-if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t => t.status === filters.status); }
-
-      
-      if (filters?.priority && filters.priority !== 'all') {
-        filtered = filtered.filter(t => t.priority === filters.priority);
-      }
-      
-      // Search by ID and title
-      if (filters?.search) {
-        const searchLower = filters.search.toLowerCase().trim();
-        filtered = filtered.filter(t => 
-          String(t.id).includes(searchLower) ||
-          t.title?.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      // Sort by date
+      // Sort by date (client-side since API might not support it)
       if (filters?.sortOrder) {
         filtered.sort((a, b) => {
           const dateA = new Date(a.created_at || a.createdAt).getTime();
@@ -104,7 +102,7 @@ if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t 
       body: JSON.stringify({
         title: input.title,
         description: input.description,
-       status: input.status || 'Aberto',
+        status: input.status || 'Aberto',
         priority: input.priority,
         category: input.category,
         requester_name: input.requester_name,
@@ -140,7 +138,7 @@ if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t 
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Update error:', errorData);
+      console.error('Error updating ticket:', errorData);
       throw new Error('Erro ao atualizar chamado');
     }
     
@@ -159,18 +157,19 @@ if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t 
   },
 };
 
-// Normalize ticket data from API to match our Ticket type
+// Normalize ticket data from API
 function normalizeTicket(data: any): Ticket {
   return {
-    id: String(data.id),
+    id: String(data.id || data.tickets_id),
+    tickets_id: data.tickets_id || data.id,
     title: data.title || '',
     description: data.description || '',
     status: data.status || 'Aberto',
     priority: data.priority || 'Media',
-    category: data.category || '',
+    category: data.category || 'Outros',
     requester_name: data.requester_name || '',
     requester_email: data.requester_email || '',
-    createdAt: data.createdAt || data.created_at || new Date().toISOString(),
-    updatedAt: data.updatedAt || data.updated_at || new Date().toISOString(),
+    created_at: data.created_at || data.createdAt || new Date().toISOString(),
+    updated_at: data.updated_at || data.updatedAt || new Date().toISOString(),
   };
 }
