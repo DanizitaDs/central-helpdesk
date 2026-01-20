@@ -45,7 +45,7 @@ export interface PaginatedResponse<T> {
 }
 
 export interface TicketFilters {
-  status?: TicketStatus | 'all';
+  status?: TicketStatus[] | 'all';
   priority?: TicketPriority | 'all';
   search?: string;
   sortOrder?: 'newest' | 'oldest';
