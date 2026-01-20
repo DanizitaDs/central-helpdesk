@@ -167,7 +167,7 @@ export const ticketApi = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/tickets/validation-limits`);
+      const response = await fetch(`${API_BASE_URL}/validation-limits`);
       
       if (!response.ok) {
         throw new Error('Erro ao carregar limites de validação');
@@ -180,7 +180,7 @@ export const ticketApi = {
           max: data.title_max || data.title?.max || 80,
         },
         description: {
-          min: data.description_min || data.description?.min || 0,
+          min: data.description_min || data.description?.min || 10,
           max: data.description_max || data.description?.max || 2000,
         },
       };
@@ -188,10 +188,10 @@ export const ticketApi = {
       return cachedValidationLimits;
     } catch (error) {
       console.warn('Falha ao buscar limites da API, usando valores padrão');
-      // Return default values if API fails
+      // Return default values if API fails (description min = 10 as per API)
       return {
         title: { min: 5, max: 80 },
-        description: { min: 0, max: 2000 },
+        description: { min: 10, max: 2000 },
       };
     }
   },
