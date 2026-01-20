@@ -104,7 +104,7 @@ if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t 
       body: JSON.stringify({
         title: input.title,
         description: input.description,
-        status: input.status,
+        status: input.status ?? 'Aberto',
         priority: input.priority,
         category: input.category,
         requester_name: input.requester_name,
