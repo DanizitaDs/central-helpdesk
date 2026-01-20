@@ -32,15 +32,7 @@ export const ticketApi = {
       let filtered = [...data];
       
       // Apply client-side filters - filter ALL tickets of that status
-      if (
-  filters?.status &&
-  filters.status !== 'all' &&
-  Array.isArray(filters.status)
-) {
-  filtered = filtered.filter(t =>
-    filters.status.includes(t.status)
-  );
-}
+if (filters?.status && filters.status !== 'all') { filtered = filtered.filter(t => t.status === filters.status); }
 
       
       if (filters?.priority && filters.priority !== 'all') {
