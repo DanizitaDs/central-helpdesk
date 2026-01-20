@@ -48,46 +48,30 @@ export function formatDateTime(dateString: string): string {
   });
 }
 
-// Status labels - support both English and Portuguese values from API
+// Status labels - Portuguese values from API (sem acento)
 export const statusLabels: Record<string, string> = {
-  open: 'Aberto',
-  in_progress: 'Em Andamento',
-  resolved: 'Resolvido',
-  closed: 'Fechado',
-  all: 'Todos',
-  // Portuguese values from API
   'Aberto': 'Aberto',
   'Em Andamento': 'Em Andamento',
   'Resolvido': 'Resolvido',
   'Fechado': 'Fechado',
+  'all': 'Todos',
 };
 
-// Priority labels - support both English and Portuguese values from API
+// Priority labels - Portuguese values from API (sem acento)
 export const priorityLabels: Record<string, string> = {
-  low: 'Baixa',
-  medium: 'Média',
-  high: 'Alta',
-  critical: 'Crítica',
-  all: 'Todas',
-  // Portuguese values from API
   'Baixa': 'Baixa',
-  'Média': 'Média',
+  'Media': 'Média',
   'Alta': 'Alta',
-  'Crítica': 'Crítica',
+  'Critica': 'Crítica',
+  'all': 'Todas',
 };
 
-// Category labels - support various values from API
+// Category labels
 export const categoryLabels: Record<string, string> = {
-  bug: 'Bug',
-  feature: 'Funcionalidade',
-  support: 'Suporte',
-  question: 'Dúvida',
-  other: 'Outro',
-  // Portuguese/custom values from API
   'Bug': 'Bug',
   'Funcionalidade': 'Funcionalidade',
   'Suporte': 'Suporte',
-  'Dúvida': 'Dúvida',
+  'Duvida': 'Dúvida',
   'Outro': 'Outro',
   'Acesso': 'Acesso',
   'Hardware': 'Hardware',
@@ -106,5 +90,18 @@ export function validateTitle(title: string): string | null {
 export function validateDescription(description: string): string | null {
   if (!description.trim()) return 'A descrição é obrigatória';
   if (description.length > 2000) return 'A descrição deve ter no máximo 2000 caracteres';
+  return null;
+}
+
+export function validateEmail(email: string): string | null {
+  if (!email.trim()) return 'O email é obrigatório';
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return 'Email inválido';
+  return null;
+}
+
+export function validateName(name: string): string | null {
+  if (!name.trim()) return 'O nome é obrigatório';
+  if (name.length < 2) return 'O nome deve ter no mínimo 2 caracteres';
   return null;
 }

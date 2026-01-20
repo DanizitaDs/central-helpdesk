@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
-import { TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
-import { validateTitle, validateDescription, statusLabels, priorityLabels, categoryLabels } from '@/lib/utils';
+import { TicketStatus, TicketPriority } from '@/types/ticket';
+import { validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,22 +26,33 @@ export default function TicketCreate() {
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<TicketStatus>('open');
-  const [priority, setPriority] = useState<TicketPriority>('medium');
-  const [category, setCategory] = useState<TicketCategory>('support');
+  const [status, setStatus] = useState<TicketStatus>('Aberto');
+  const [priority, setPriority] = useState<TicketPriority>('Media');
+  const [category, setCategory] = useState('');
+  const [requesterName, setRequesterName] = useState('');
+  const [requesterEmail, setRequesterEmail] = useState('');
   
   // Error state
-  const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate
+    // Validate all fields
+    const newErrors: Record<string, string> = {};
     const titleError = validateTitle(title);
-    const descriptionError = validateDescription(description);
+    const descError = validateDescription(description);
+    const nameError = validateName(requesterName);
+    const emailError = validateEmail(requesterEmail);
     
-    if (titleError || descriptionError) {
-      setErrors({ title: titleError || undefined, description: descriptionError || undefined });
+    if (titleError) newErrors.title = titleError;
+    if (descError) newErrors.description = descError;
+    if (nameError) newErrors.requesterName = nameError;
+    if (emailError) newErrors.requesterEmail = emailError;
+    if (!category.trim()) newErrors.category = 'A categoria é obrigatória';
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
     
@@ -55,6 +66,8 @@ export default function TicketCreate() {
         status,
         priority,
         category,
+        requester_name: requesterName,
+        requester_email: requesterEmail,
       });
       
       toast.success('Chamado criado com sucesso!');
@@ -71,7 +84,7 @@ export default function TicketCreate() {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <main className="container mx-auto px-4 py-8 max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -81,16 +94,16 @@ export default function TicketCreate() {
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="mb-6 gap-2"
+            className="mb-6 gap-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar para lista
           </Button>
 
           {/* Form Card */}
-          <div className="bg-card rounded-xl border shadow-card p-6 md:p-8">
+          <div className="bg-card rounded-xl border border-border shadow-card p-6 md:p-8">
             <div className="mb-6">
-              <h1 className="text-2xl font-bold text-foreground">Criar Novo Chamado</h1>
+              <h1 className="text-3xl font-bold text-foreground">Novo Chamado</h1>
               <p className="text-muted-foreground">Preencha os campos abaixo para abrir um novo chamado.</p>
             </div>
 
@@ -147,19 +160,19 @@ export default function TicketCreate() {
               {/* Category, Priority, Status */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select value={category} onValueChange={(value) => setCategory(value as TicketCategory)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bug">Bug</SelectItem>
-                      <SelectItem value="feature">Funcionalidade</SelectItem>
-                      <SelectItem value="support">Suporte</SelectItem>
-                      <SelectItem value="question">Dúvida</SelectItem>
-                      <SelectItem value="other">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="category">
+                    Categoria <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="category"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="Ex: Suporte, Hardware"
+                    className={errors.category ? 'border-destructive' : ''}
+                  />
+                  {errors.category && (
+                    <span className="text-sm text-destructive">{errors.category}</span>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -169,10 +182,10 @@ export default function TicketCreate() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Baixa</SelectItem>
-                      <SelectItem value="medium">Média</SelectItem>
-                      <SelectItem value="high">Alta</SelectItem>
-                      <SelectItem value="critical">Crítica</SelectItem>
+                      <SelectItem value="Baixa">Baixa</SelectItem>
+                      <SelectItem value="Media">Média</SelectItem>
+                      <SelectItem value="Alta">Alta</SelectItem>
+                      <SelectItem value="Critica">Crítica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -184,17 +197,63 @@ export default function TicketCreate() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="open">Aberto</SelectItem>
-                      <SelectItem value="in_progress">Em Andamento</SelectItem>
-                      <SelectItem value="resolved">Resolvido</SelectItem>
-                      <SelectItem value="closed">Fechado</SelectItem>
+                      <SelectItem value="Aberto">Aberto</SelectItem>
+                      <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                      <SelectItem value="Resolvido">Resolvido</SelectItem>
+                      <SelectItem value="Fechado">Fechado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
+              {/* Requester Info */}
+              <div className="border-t border-border pt-6">
+                <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Informações do Solicitante
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterName">
+                      Nome <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="requesterName"
+                      value={requesterName}
+                      onChange={(e) => setRequesterName(e.target.value)}
+                      placeholder="Nome do solicitante"
+                      className={errors.requesterName ? 'border-destructive' : ''}
+                    />
+                    {errors.requesterName && (
+                      <span className="text-sm text-destructive">{errors.requesterName}</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="requesterEmail">
+                      Email <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="requesterEmail"
+                        type="email"
+                        value={requesterEmail}
+                        onChange={(e) => setRequesterEmail(e.target.value)}
+                        placeholder="email@exemplo.com"
+                        className={`pl-10 ${errors.requesterEmail ? 'border-destructive' : ''}`}
+                      />
+                    </div>
+                    {errors.requesterEmail && (
+                      <span className="text-sm text-destructive">{errors.requesterEmail}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Submit Button */}
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-6 border-t border-border">
                 <Button
                   type="button"
                   variant="outline"
@@ -206,7 +265,7 @@ export default function TicketCreate() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 gap-2"
+                  className="flex-1 gap-2 bg-primary hover:bg-primary/90"
                 >
                   <Save className="w-4 h-4" />
                   {isSubmitting ? 'Criando...' : 'Criar Chamado'}
