@@ -36,7 +36,7 @@ export default function TicketList() {
   const [total, setTotal] = useState(0);
   
   // Filters
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<TicketStatus[] | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
