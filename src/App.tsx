@@ -18,8 +18,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<TicketList />} />
-          <Route path="/create" element={<TicketCreate />} />
-          <Route path="/edit/:id" element={<TicketEdit />} />
+          <Route path="/tickets/create" element={<TicketCreate />} />
+          <Route path="/tickets/:id/edit" element={<TicketEdit />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
