@@ -6,6 +6,7 @@ import { ticketApi } from '@/services/api';
 import { TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
 import { validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
+import { CreateConfirmDialog } from '@/components/CreateConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,11 +35,11 @@ export default function TicketCreate() {
   
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Confirm dialog state
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate all fields
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const titleError = validateTitle(title);
     const descError = validateDescription(description);
@@ -53,10 +54,22 @@ export default function TicketCreate() {
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      return;
+      return false;
     }
     
     setErrors({});
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateForm()) {
+      setConfirmDialogOpen(true);
+    }
+  };
+
+  const handleConfirmCreate = async () => {
     setIsSubmitting(true);
     
     try {
@@ -71,6 +84,7 @@ export default function TicketCreate() {
       });
       
       toast.success('Chamado criado com sucesso!');
+      setConfirmDialogOpen(false);
       navigate('/');
     } catch (err) {
       toast.error('Erro ao criar chamado');
@@ -279,6 +293,15 @@ export default function TicketCreate() {
           </div>
         </motion.div>
       </main>
+
+      <CreateConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        onConfirm={handleConfirmCreate}
+        isLoading={isSubmitting}
+        title="Confirmar Criação"
+        description={`Deseja realmente criar o chamado "${title}"?`}
+      />
     </div>
   );
 }
