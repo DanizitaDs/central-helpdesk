@@ -46,3 +46,14 @@ export interface PaginatedResponse<T> {
 }
 
 export interface TicketFilters { status?: TicketStatus | 'all'; priority?: TicketPriority | 'all'; search?: string; sortOrder?: 'newest' | 'oldest'; }
+
+export interface ValidationLimits {
+  title: {
+    min: number;
+    max: number;
+  };
+  description: {
+    min: number;
+    max: number;
+  };
+}

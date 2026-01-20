@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
-import { TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
+import { TicketStatus, TicketPriority, TicketCategory, ValidationLimits } from '@/types/ticket';
 import { validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { CreateConfirmDialog } from '@/components/CreateConfirmDialog';
@@ -24,6 +24,12 @@ export default function TicketCreate() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Validation limits from API
+  const [validationLimits, setValidationLimits] = useState<ValidationLimits>({
+    title: { min: 5, max: 80 },
+    description: { min: 0, max: 2000 },
+  });
+  
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -39,10 +45,23 @@ export default function TicketCreate() {
   // Confirm dialog state
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
 
+  // Fetch validation limits from API
+  useEffect(() => {
+    const fetchLimits = async () => {
+      try {
+        const limits = await ticketApi.getValidationLimits();
+        setValidationLimits(limits);
+      } catch (err) {
+        console.warn('Usando limites de validação padrão');
+      }
+    };
+    fetchLimits();
+  }, []);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const titleError = validateTitle(title);
-    const descError = validateDescription(description);
+    const titleError = validateTitle(title, validationLimits.title);
+    const descError = validateDescription(description, validationLimits.description);
     const nameError = validateName(requesterName);
     const emailError = validateEmail(requesterEmail);
     
@@ -131,17 +150,19 @@ export default function TicketCreate() {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Digite o título do chamado (5-80 caracteres)"
+                  placeholder={`Digite o título do chamado (${validationLimits.title.min}-${validationLimits.title.max} caracteres)`}
                   className={errors.title ? 'border-destructive' : ''}
                 />
                 <div className="flex justify-between text-sm">
                   {errors.title ? (
                     <span className="text-destructive">{errors.title}</span>
                   ) : (
-                    <span className="text-muted-foreground">Mínimo 5, máximo 80 caracteres</span>
+                    <span className="text-muted-foreground">
+                      Mínimo {validationLimits.title.min}, máximo {validationLimits.title.max} caracteres
+                    </span>
                   )}
-                  <span className={`${title.length > 80 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {title.length}/80
+                  <span className={`${title.length > validationLimits.title.max ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {title.length}/{validationLimits.title.max}
                   </span>
                 </div>
               </div>
@@ -163,10 +184,14 @@ export default function TicketCreate() {
                   {errors.description ? (
                     <span className="text-destructive">{errors.description}</span>
                   ) : (
-                    <span className="text-muted-foreground">Máximo 2000 caracteres</span>
+                    <span className="text-muted-foreground">
+                      {validationLimits.description.min > 0 
+                        ? `Mínimo ${validationLimits.description.min}, máximo ${validationLimits.description.max} caracteres`
+                        : `Máximo ${validationLimits.description.max} caracteres`}
+                    </span>
                   )}
-                  <span className={`${description.length > 2000 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {description.length}/2000
+                  <span className={`${description.length > validationLimits.description.max ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {description.length}/{validationLimits.description.max}
                   </span>
                 </div>
               </div>

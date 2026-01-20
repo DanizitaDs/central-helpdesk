@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
-import { Ticket, TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
+import { Ticket, TicketStatus, TicketPriority, TicketCategory, ValidationLimits } from '@/types/ticket';
 import { formatDateTime, validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { LoadingState, ErrorState } from '@/components/States';
@@ -32,6 +32,12 @@ export default function TicketEdit() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Validation limits from API
+  const [validationLimits, setValidationLimits] = useState<ValidationLimits>({
+    title: { min: 5, max: 80 },
+    description: { min: 0, max: 2000 },
+  });
+  
   // Form state - all editable fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -48,24 +54,31 @@ export default function TicketEdit() {
   const [editConfirmDialogOpen, setEditConfirmDialogOpen] = useState(false);
 
   useEffect(() => {
-    const fetchTicket = async () => {
+    const fetchData = async () => {
       if (!id) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        const data = await ticketApi.getById(id);
-        if (data) {
-          setTicket(data);
+        // Fetch ticket and validation limits in parallel
+        const [ticketData, limits] = await Promise.all([
+          ticketApi.getById(id),
+          ticketApi.getValidationLimits(),
+        ]);
+        
+        setValidationLimits(limits);
+        
+        if (ticketData) {
+          setTicket(ticketData);
           // Pre-fill all form fields
-          setTitle(data.title);
-          setDescription(data.description);
-          setStatus(data.status);
-          setCategory(data.category || 'Acesso');
-          setPriority(data.priority);
-          setRequesterName(data.requester_name || '');
-          setRequesterEmail(data.requester_email || '');
+          setTitle(ticketData.title);
+          setDescription(ticketData.description);
+          setStatus(ticketData.status);
+          setCategory(ticketData.category || 'Acesso');
+          setPriority(ticketData.priority);
+          setRequesterName(ticketData.requester_name || '');
+          setRequesterEmail(ticketData.requester_email || '');
         } else {
           setError('Chamado não encontrado');
         }
@@ -77,13 +90,13 @@ export default function TicketEdit() {
       }
     };
     
-    fetchTicket();
+    fetchData();
   }, [id]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const titleError = validateTitle(title);
-    const descError = validateDescription(description);
+    const titleError = validateTitle(title, validationLimits.title);
+    const descError = validateDescription(description, validationLimits.description);
     const nameError = validateName(requesterName);
     const emailError = validateEmail(requesterEmail);
     
@@ -218,12 +231,20 @@ export default function TicketEdit() {
                     rows={4}
                     className={errors.description ? 'border-destructive' : ''}
                   />
-                  {errors.description && (
-                    <span className="text-sm text-destructive">{errors.description}</span>
-                  )}
-                  <span className="text-sm text-muted-foreground">
-                    {description.length}/2000
-                  </span>
+                  <div className="flex justify-between text-sm">
+                    {errors.description ? (
+                      <span className="text-destructive">{errors.description}</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        {validationLimits.description.min > 0 
+                          ? `Mínimo ${validationLimits.description.min}, máximo ${validationLimits.description.max} caracteres`
+                          : `Máximo ${validationLimits.description.max} caracteres`}
+                      </span>
+                    )}
+                    <span className={`${description.length > validationLimits.description.max ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {description.length}/{validationLimits.description.max}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Status, Category & Priority */}

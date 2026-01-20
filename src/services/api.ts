@@ -3,10 +3,14 @@ import {
   TicketCreateInput, 
   TicketUpdateInput, 
   PaginatedResponse, 
-  TicketFilters
+  TicketFilters,
+  ValidationLimits
 } from '@/types/ticket';
 
 const API_BASE_URL = 'https://x8ki-letl-twmt.n7.xano.io/api:KC4cuToL';
+
+// Default validation limits (fallback)
+let cachedValidationLimits: ValidationLimits | null = null;
 
 // API Functions
 export const ticketApi = {
@@ -153,6 +157,42 @@ export const ticketApi = {
     
     if (!response.ok) {
       throw new Error('Erro ao excluir chamado');
+    }
+  },
+
+  async getValidationLimits(): Promise<ValidationLimits> {
+    // Return cached limits if available
+    if (cachedValidationLimits) {
+      return cachedValidationLimits;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/tickets/validation-limits`);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar limites de validação');
+      }
+      
+      const data = await response.json();
+      cachedValidationLimits = {
+        title: {
+          min: data.title_min || data.title?.min || 5,
+          max: data.title_max || data.title?.max || 80,
+        },
+        description: {
+          min: data.description_min || data.description?.min || 0,
+          max: data.description_max || data.description?.max || 2000,
+        },
+      };
+      
+      return cachedValidationLimits;
+    } catch (error) {
+      console.warn('Falha ao buscar limites da API, usando valores padrão');
+      // Return default values if API fails
+      return {
+        title: { min: 5, max: 80 },
+        description: { min: 0, max: 2000 },
+      };
     }
   },
 };
