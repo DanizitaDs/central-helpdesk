@@ -1,18 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, Eye, ArrowUp, ArrowDown } from 'lucide-react';
-import { ticketApi } from '@/services/api';
-import { Ticket, TicketFilters, TicketStatus, TicketPriority } from '@/types/ticket';
-import { useDebounce, formatDate } from '@/lib/utils';
-import { StatusBadge } from '@/components/StatusBadge';
-import { PriorityBadge } from '@/components/PriorityBadge';
-import { CategoryBadge } from '@/components/CategoryBadge';
-import { Pagination } from '@/components/Pagination';
-import { Header } from '@/components/Header';
-import { LoadingState, EmptyState, ErrorState } from '@/components/States';
-import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
-import { TicketViewDialog } from '@/components/TicketViewDialog';
+import { Plus, Search, Eye, Edit, Trash2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -22,12 +10,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { toast } from 'sonner';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { ticketApi } from '@/services/api';
+import { Ticket, TicketStatus, TicketPriority, TicketFilters } from '@/types/ticket';
+import { StatusBadge } from '@/components/StatusBadge';
+import { PriorityBadge } from '@/components/PriorityBadge';
+import { CategoryBadge } from '@/components/CategoryBadge';
+import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { TicketViewDialog } from '@/components/TicketViewDialog';
+import { Pagination } from '@/components/Pagination';
+import { EmptyState, LoadingState, ErrorState } from '@/components/States';
+import { formatDate } from '@/lib/utils';
 
 const ITEMS_PER_PAGE = 10;
 
 export default function TicketList() {
   const navigate = useNavigate();
+  
+  // Data state
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,15 +43,14 @@ export default function TicketList() {
   const [total, setTotal] = useState(0);
   
   // Filters
-  const [statusFilter, setStatusFilter] = useState<TicketStatus[] | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   
   // Delete state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState<Ticket | null>(null);
   
   // View state
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -68,241 +74,247 @@ export default function TicketList() {
     }
   }, []);
 
-  // Debounced search
-  const debouncedFetch = useDebounce((query: string) => {
-    fetchTickets(
-      { status: statusFilter, priority: priorityFilter, search: query, sortOrder },
-      1
-    );
-  }, 300);
-
+  // Debounce search
   useEffect(() => {
-    fetchTickets({ status: statusFilter, priority: priorityFilter, search: searchQuery, sortOrder }, currentPage);
-  }, [statusFilter, priorityFilter, currentPage, sortOrder]);
-
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    debouncedFetch(value);
-  };
+    const timer = setTimeout(() => {
+      const filters: TicketFilters = {
+        status: statusFilter,
+        priority: priorityFilter,
+        search: searchQuery,
+        sortOrder,
+      };
+      fetchTickets(filters, 1);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [statusFilter, priorityFilter, searchQuery, sortOrder, fetchTickets]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    const filters: TicketFilters = {
+      status: statusFilter,
+      priority: priorityFilter,
+      search: searchQuery,
+      sortOrder,
+    };
+    fetchTickets(filters, page);
   };
 
-  const handleDelete = (id: string) => {
-    setTicketToDelete(id);
+  const handleDelete = async () => {
+    if (!ticketToDelete) return;
+    
+    try {
+      await ticketApi.delete(ticketToDelete.id);
+      const filters: TicketFilters = {
+        status: statusFilter,
+        priority: priorityFilter,
+        search: searchQuery,
+        sortOrder,
+      };
+      fetchTickets(filters, currentPage);
+      setDeleteDialogOpen(false);
+      setTicketToDelete(null);
+    } catch (err) {
+      console.error('Erro ao excluir:', err);
+    }
+  };
+
+  const openDeleteDialog = (ticket: Ticket) => {
+    setTicketToDelete(ticket);
     setDeleteDialogOpen(true);
   };
 
-  const handleView = (ticket: Ticket) => {
+  const openViewDialog = (ticket: Ticket) => {
     setTicketToView(ticket);
     setViewDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (!ticketToDelete) return;
-    
-    setIsDeleting(true);
-    try {
-      await ticketApi.delete(ticketToDelete);
-      toast.success('Chamado excluído com sucesso!');
-      fetchTickets({ status: statusFilter, priority: priorityFilter, search: searchQuery, sortOrder }, currentPage);
-    } catch (err) {
-      toast.error('Erro ao excluir chamado');
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setTicketToDelete(null);
-    }
-  };
-
-  const toggleSort = () => {
-    setSortOrder(prev => prev === 'newest' ? 'oldest' : 'newest');
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      <div className="container mx-auto py-8 px-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Chamados</h1>
-            <p className="text-muted-foreground">
-              {loading ? 'Carregando...' : `${total} chamado${total !== 1 ? 's' : ''}`}
+            <p className="text-muted-foreground mt-1">
+              {total} chamado{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
             </p>
           </div>
-          <Button onClick={() => navigate('/create')} className="gap-2">
-            <Plus className="w-4 h-4" />
+          <Button onClick={() => navigate('/tickets/new')} className="gap-2">
+            <Plus className="h-4 w-4" />
             Novo Chamado
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="bg-card rounded-xl border border-border p-4 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="bg-card rounded-lg border p-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
+            <div className="relative lg:col-span-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por ID ou título..."
                 value={searchQuery}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 bg-secondary border-border"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
               />
             </div>
-            
-            <div className="flex flex-wrap gap-3">
-              <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value as TicketStatus | 'all'); setCurrentPage(1); }}>
-                <SelectTrigger className="w-44 bg-secondary border-border">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos Status</SelectItem>
-                  <SelectItem value="Aberto">Aberto</SelectItem>
-                  <SelectItem value="Em Andamento">Em Andamento</SelectItem>
-                  <SelectItem value="Resolvido">Resolvido</SelectItem>
-                  <SelectItem value="Cancelado">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={priorityFilter} onValueChange={(value) => { setPriorityFilter(value as TicketPriority | 'all'); setCurrentPage(1); }}>
-                <SelectTrigger className="w-44 bg-secondary border-border">
-                  <SelectValue placeholder="Prioridade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas Prioridades</SelectItem>
-                  <SelectItem value="Baixa">Baixa</SelectItem>
-                  <SelectItem value="Media">Média</SelectItem>
-                  <SelectItem value="Alta">Alta</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <Button variant="outline" onClick={toggleSort} className="gap-2 border-border">
-                {sortOrder === 'newest' ? <ArrowDown className="w-4 h-4" /> : <ArrowUp className="w-4 h-4" />}
-                {sortOrder === 'newest' ? 'Mais Recentes' : 'Mais Antigos'}
-              </Button>
-            </div>
+            {/* Status Filter */}
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as TicketStatus | 'all')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="Aberto">Aberto</SelectItem>
+                <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                <SelectItem value="Resolvido">Resolvido</SelectItem>
+                <SelectItem value="Cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Priority Filter */}
+            <Select
+              value={priorityFilter}
+              onValueChange={(value) => setPriorityFilter(value as TicketPriority | 'all')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Prioridade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Prioridades</SelectItem>
+                <SelectItem value="Baixa">Baixa</SelectItem>
+                <SelectItem value="Media">Média</SelectItem>
+                <SelectItem value="Alta">Alta</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Sort Order */}
+            <Select
+              value={sortOrder}
+              onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}
+            >
+              <SelectTrigger>
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Ordenar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Mais Recentes</SelectItem>
+                <SelectItem value="oldest">Mais Antigos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Content */}
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          {loading ? (
-            <LoadingState message="Carregando chamados..." />
-          ) : error ? (
-            <ErrorState 
-              onRetry={() => fetchTickets({ status: statusFilter, priority: priorityFilter, search: searchQuery, sortOrder }, currentPage)} 
+        {loading ? (
+          <LoadingState />
+        ) : error ? (
+          <ErrorState description={error} onRetry={() => handlePageChange(currentPage)} />
+        ) : tickets.length === 0 ? (
+          <EmptyState
+            title="Nenhum chamado encontrado"
+            description="Crie um novo chamado para começar."
+          />
+        ) : (
+          <>
+            {/* Table */}
+            <div className="bg-card rounded-lg border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">ID</TableHead>
+                    <TableHead>Título</TableHead>
+                    <TableHead className="w-32">Status</TableHead>
+                    <TableHead className="w-28">Prioridade</TableHead>
+                    <TableHead className="w-28">Categoria</TableHead>
+                    <TableHead className="w-32">Criado em</TableHead>
+                    <TableHead className="w-32 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {tickets.map((ticket) => (
+                    <TableRow key={ticket.id}>
+                      <TableCell className="font-mono text-sm">
+                        #{ticket.tickets_id ?? ticket.id}
+                      </TableCell>
+                      <TableCell className="font-medium max-w-xs truncate">
+                        {ticket.title}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={ticket.status} />
+                      </TableCell>
+                      <TableCell>
+                        <PriorityBadge priority={ticket.priority} />
+                      </TableCell>
+                      <TableCell>
+                        <CategoryBadge category={ticket.category} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {formatDate(ticket.created_at)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openViewDialog(ticket)}
+                            title="Visualizar"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/tickets/${ticket.tickets_id ?? ticket.id}/edit`)}
+                            title="Editar"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDeleteDialog(ticket)}
+                            title="Excluir"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
             />
-          ) : tickets.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-secondary/50 border-b border-border">
-                    <tr>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">ID</th>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">Título</th>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">Status</th>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">Prioridade</th>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">Categoria</th>
-                      <th className="text-left text-sm font-semibold text-muted-foreground px-6 py-4">Data</th>
-                      <th className="text-right text-sm font-semibold text-muted-foreground px-6 py-4">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <AnimatePresence>
-                      {tickets.map((ticket, index) => (
-                        <motion.tr
-                          key={ticket.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="border-b border-border last:border-0 hover:bg-secondary/30 transition-colors"
-                        >
-                          <td className="px-6 py-4">
-                            <span className="text-muted-foreground font-mono">#{ticket.id}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-medium text-foreground line-clamp-1 max-w-xs">{ticket.title}</p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <StatusBadge status={ticket.status} size="sm" />
-                          </td>
-                          <td className="px-6 py-4">
-                            <PriorityBadge priority={ticket.priority} size="sm" />
-                          </td>
-                          <td className="px-6 py-4">
-                            <CategoryBadge category={ticket.category} size="sm" />
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="text-sm text-muted-foreground">
-                              {formatDate(ticket.createdAt)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleView(ticket)}
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => navigate(`/edit/${ticket.id}`)}
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(ticket.id)}
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </div>
+          </>
+        )}
 
-              {totalPages > 1 && (
-                <div className="border-t border-border px-6 py-4">
-                  <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </main>
+        {/* Dialogs */}
+        <DeleteConfirmDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleDelete}
+          title="Excluir Chamado"
+          description={`Tem certeza que deseja excluir o chamado "${ticketToDelete?.title}"? Esta ação não pode ser desfeita.`}
+        />
 
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={confirmDelete}
-        isLoading={isDeleting}
-      />
-
-      <TicketViewDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        ticket={ticketToView}
-      />
+        <TicketViewDialog
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          ticket={ticketToView}
+        />
+      </div>
     </div>
   );
 }

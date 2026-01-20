@@ -182,7 +182,7 @@ export default function TicketEdit() {
               </div>
               <h1 className="text-3xl font-bold text-foreground">{ticket.title}</h1>
               <p className="text-muted-foreground mt-2">
-                Criado em {formatDateTime(ticket.createdAt)}
+                Criado em {formatDateTime(ticket.created_at)}
               </p>
             </div>
 

@@ -72,11 +72,11 @@ export function TicketViewDialog({ open, onOpenChange, ticket }: TicketViewDialo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
-                <span>Criado: {formatDateTime(ticket.createdAt)}</span>
+                <span>Criado: {formatDateTime(ticket.created_at)}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-4 h-4" />
-                <span>Atualizado: {formatDateTime(ticket.updatedAt)}</span>
+                <span>Atualizado: {formatDateTime(ticket.updated_at)}</span>
               </div>
             </div>
           </div>
