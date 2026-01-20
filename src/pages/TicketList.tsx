@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { ticketApi } from '@/services/api';
 import { Ticket, TicketStatus, TicketPriority, TicketFilters } from '@/types/ticket';
+import { Header } from '@/components/Header';
 import { StatusBadge } from '@/components/StatusBadge';
 import { PriorityBadge } from '@/components/PriorityBadge';
 import { CategoryBadge } from '@/components/CategoryBadge';
@@ -130,6 +131,7 @@ export default function TicketList() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Header />
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">

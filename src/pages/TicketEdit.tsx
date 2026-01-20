@@ -9,6 +9,7 @@ import { Header } from '@/components/Header';
 import { LoadingState, ErrorState } from '@/components/States';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+import { EditConfirmDialog } from '@/components/EditConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,8 +44,9 @@ export default function TicketEdit() {
   // Error state
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  // Delete state
+  // Dialog states
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editConfirmDialogOpen, setEditConfirmDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -80,11 +82,7 @@ export default function TicketEdit() {
     fetchTicket();
   }, [id]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!id || !ticket) return;
-    
-    // Validate all fields
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
     const titleError = validateTitle(title);
     const descError = validateDescription(description);
@@ -99,14 +97,28 @@ export default function TicketEdit() {
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      return;
+      return false;
     }
     
     setErrors({});
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !ticket) return;
+    
+    if (validateForm()) {
+      setEditConfirmDialogOpen(true);
+    }
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!id) return;
+    
     setIsSubmitting(true);
     
     try {
-      // Send complete JSON as required by Xano PUT
       await ticketApi.update({
         tickets_id: Number(id),
         title,
@@ -119,6 +131,7 @@ export default function TicketEdit() {
       });
       
       toast.success('Chamado atualizado com sucesso!');
+      setEditConfirmDialogOpen(false);
       navigate('/');
     } catch (err) {
       toast.error('Erro ao atualizar chamado');
@@ -372,6 +385,15 @@ export default function TicketEdit() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDelete}
         isLoading={isDeleting}
+      />
+
+      <EditConfirmDialog
+        open={editConfirmDialogOpen}
+        onOpenChange={setEditConfirmDialogOpen}
+        onConfirm={handleConfirmEdit}
+        isLoading={isSubmitting}
+        title="Confirmar Alterações"
+        description={`Deseja realmente salvar as alterações no chamado "${title}"?`}
       />
     </div>
   );
