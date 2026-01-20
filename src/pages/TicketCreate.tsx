@@ -27,7 +27,7 @@ export default function TicketCreate() {
   // Validation limits from API
   const [validationLimits, setValidationLimits] = useState<ValidationLimits>({
     title: { min: 5, max: 80 },
-    description: { min: 0, max: 2000 },
+    description: { min: 10, max: 2000 },
   });
   
   // Form state
