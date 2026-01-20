@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Save, Trash2, User, Mail } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
 import { Ticket, TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
 import { formatDateTime, validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { LoadingState, ErrorState } from '@/components/States';
 import { StatusBadge } from '@/components/StatusBadge';
-import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
+
 import { EditConfirmDialog } from '@/components/EditConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,9 +45,7 @@ export default function TicketEdit() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Dialog states
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editConfirmDialogOpen, setEditConfirmDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchTicket = async () => {
@@ -141,23 +139,6 @@ export default function TicketEdit() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!id) return;
-    
-    setIsDeleting(true);
-    
-    try {
-      await ticketApi.delete(id);
-      toast.success('Chamado excluído com sucesso!');
-      navigate('/');
-    } catch (err) {
-      toast.error('Erro ao excluir chamado');
-      console.error(err);
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -345,34 +326,22 @@ export default function TicketEdit() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col-reverse md:flex-row gap-3 pt-6 border-t border-border">
+                <div className="flex gap-3 pt-6 border-t border-border justify-end">
                   <Button
                     type="button"
-                    variant="destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
+                    variant="outline"
+                    onClick={() => navigate('/')}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
                     className="gap-2"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    Excluir Chamado
+                    <Save className="w-4 h-4" />
+                    {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
                   </Button>
-                  
-                  <div className="flex gap-3 flex-1 md:justify-end">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => navigate('/')}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
-                    </Button>
-                  </div>
                 </div>
               </form>
             </div>
@@ -380,12 +349,6 @@ export default function TicketEdit() {
         ) : null}
       </main>
 
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDelete}
-        isLoading={isDeleting}
-      />
 
       <EditConfirmDialog
         open={editConfirmDialogOpen}
