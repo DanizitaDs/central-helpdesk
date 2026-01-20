@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
-import { TicketStatus, TicketPriority } from '@/types/ticket';
+import { TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
 import { validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ export default function TicketCreate() {
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TicketStatus>('Aberto');
   const [priority, setPriority] = useState<TicketPriority>('Media');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState<TicketCategory>('Acesso');
   const [requesterName, setRequesterName] = useState('');
   const [requesterEmail, setRequesterEmail] = useState('');
   
@@ -49,7 +49,7 @@ export default function TicketCreate() {
     if (descError) newErrors.description = descError;
     if (nameError) newErrors.requesterName = nameError;
     if (emailError) newErrors.requesterEmail = emailError;
-    if (!category.trim()) newErrors.category = 'A categoria é obrigatória';
+    if (!category) newErrors.category = 'A categoria é obrigatória';
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -101,7 +101,7 @@ export default function TicketCreate() {
           </Button>
 
           {/* Form Card */}
-          <div className="bg-card rounded-xl border border-border shadow-card p-6 md:p-8">
+          <div className="bg-card rounded-xl border border-border p-6 md:p-8">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-foreground">Novo Chamado</h1>
               <p className="text-muted-foreground">Preencha os campos abaixo para abrir um novo chamado.</p>
@@ -163,13 +163,18 @@ export default function TicketCreate() {
                   <Label htmlFor="category">
                     Categoria <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Ex: Suporte, Hardware"
-                    className={errors.category ? 'border-destructive' : ''}
-                  />
+                  <Select value={category} onValueChange={(value) => setCategory(value as TicketCategory)}>
+                    <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Acesso">Acesso</SelectItem>
+                      <SelectItem value="Hardware">Hardware</SelectItem>
+                      <SelectItem value="Software">Software</SelectItem>
+                      <SelectItem value="Rede">Rede</SelectItem>
+                      <SelectItem value="Outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
                   {errors.category && (
                     <span className="text-sm text-destructive">{errors.category}</span>
                   )}
@@ -185,7 +190,6 @@ export default function TicketCreate() {
                       <SelectItem value="Baixa">Baixa</SelectItem>
                       <SelectItem value="Media">Média</SelectItem>
                       <SelectItem value="Alta">Alta</SelectItem>
-                      <SelectItem value="Critica">Crítica</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -200,7 +204,7 @@ export default function TicketCreate() {
                       <SelectItem value="Aberto">Aberto</SelectItem>
                       <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                       <SelectItem value="Resolvido">Resolvido</SelectItem>
-                      <SelectItem value="Fechado">Fechado</SelectItem>
+                      <SelectItem value="Cancelado">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -265,7 +269,7 @@ export default function TicketCreate() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 gap-2 bg-primary hover:bg-primary/90"
+                  className="flex-1 gap-2"
                 >
                   <Save className="w-4 h-4" />
                   {isSubmitting ? 'Criando...' : 'Criar Chamado'}

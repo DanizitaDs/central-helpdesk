@@ -3,13 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Save, Trash2, User, Mail } from 'lucide-react';
 import { ticketApi } from '@/services/api';
-import { Ticket, TicketStatus, TicketPriority } from '@/types/ticket';
+import { Ticket, TicketStatus, TicketPriority, TicketCategory } from '@/types/ticket';
 import { formatDateTime, validateTitle, validateDescription, validateEmail, validateName } from '@/lib/utils';
 import { Header } from '@/components/Header';
 import { LoadingState, ErrorState } from '@/components/States';
 import { StatusBadge } from '@/components/StatusBadge';
-import { PriorityBadge } from '@/components/PriorityBadge';
-import { CategoryBadge } from '@/components/CategoryBadge';
 import { DeleteConfirmDialog } from '@/components/DeleteConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +34,8 @@ export default function TicketEdit() {
   // Form state - all editable fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('');
+  const [status, setStatus] = useState<TicketStatus>('Aberto');
+  const [category, setCategory] = useState<TicketCategory | string>('Acesso');
   const [priority, setPriority] = useState<TicketPriority>('Media');
   const [requesterName, setRequesterName] = useState('');
   const [requesterEmail, setRequesterEmail] = useState('');
@@ -62,7 +61,8 @@ export default function TicketEdit() {
           // Pre-fill all form fields
           setTitle(data.title);
           setDescription(data.description);
-          setCategory(data.category);
+          setStatus(data.status);
+          setCategory(data.category || 'Acesso');
           setPriority(data.priority);
           setRequesterName(data.requester_name || '');
           setRequesterEmail(data.requester_email || '');
@@ -95,7 +95,7 @@ export default function TicketEdit() {
     if (descError) newErrors.description = descError;
     if (nameError) newErrors.requesterName = nameError;
     if (emailError) newErrors.requesterEmail = emailError;
-    if (!category.trim()) newErrors.category = 'A categoria é obrigatória';
+    if (!category) newErrors.category = 'A categoria é obrigatória';
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -111,7 +111,8 @@ export default function TicketEdit() {
         tickets_id: Number(id),
         title,
         description,
-        category,
+        status,
+        category: category as string,
         priority,
         requester_name: requesterName,
         requester_email: requesterEmail,
@@ -186,7 +187,7 @@ export default function TicketEdit() {
             </div>
 
             {/* Edit Form Card */}
-            <div className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-card">
+            <div className="bg-card rounded-xl border border-border p-6 md:p-8">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-foreground">Editar Chamado</h2>
                 <p className="text-muted-foreground">Atualize os campos abaixo.</p>
@@ -231,19 +232,39 @@ export default function TicketEdit() {
                   </span>
                 </div>
 
-                {/* Category & Priority */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Status, Category & Priority */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={status} onValueChange={(value) => setStatus(value as TicketStatus)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Aberto">Aberto</SelectItem>
+                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                        <SelectItem value="Resolvido">Resolvido</SelectItem>
+                        <SelectItem value="Cancelado">Cancelado</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="category">
                       Categoria <span className="text-destructive">*</span>
                     </Label>
-                    <Input
-                      id="category"
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      placeholder="Ex: Suporte, Hardware, Software"
-                      className={errors.category ? 'border-destructive' : ''}
-                    />
+                    <Select value={category} onValueChange={(value) => setCategory(value as TicketCategory)}>
+                      <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Acesso">Acesso</SelectItem>
+                        <SelectItem value="Hardware">Hardware</SelectItem>
+                        <SelectItem value="Software">Software</SelectItem>
+                        <SelectItem value="Rede">Rede</SelectItem>
+                        <SelectItem value="Outros">Outros</SelectItem>
+                      </SelectContent>
+                    </Select>
                     {errors.category && (
                       <span className="text-sm text-destructive">{errors.category}</span>
                     )}
@@ -259,7 +280,6 @@ export default function TicketEdit() {
                         <SelectItem value="Baixa">Baixa</SelectItem>
                         <SelectItem value="Media">Média</SelectItem>
                         <SelectItem value="Alta">Alta</SelectItem>
-                        <SelectItem value="Critica">Crítica</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -334,7 +354,7 @@ export default function TicketEdit() {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="gap-2 bg-primary hover:bg-primary/90"
+                      className="gap-2"
                     >
                       <Save className="w-4 h-4" />
                       {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}

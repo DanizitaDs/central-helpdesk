@@ -74,8 +74,8 @@ export default {
           "in-progress-bg": "hsl(var(--status-in-progress-bg))",
           resolved: "hsl(var(--status-resolved))",
           "resolved-bg": "hsl(var(--status-resolved-bg))",
-          closed: "hsl(var(--status-closed))",
-          "closed-bg": "hsl(var(--status-closed-bg))",
+          cancelled: "hsl(var(--status-cancelled))",
+          "cancelled-bg": "hsl(var(--status-cancelled-bg))",
         },
         priority: {
           low: "hsl(var(--priority-low))",

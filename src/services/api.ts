@@ -31,7 +31,7 @@ export const ticketApi = {
     if (Array.isArray(data)) {
       let filtered = [...data];
       
-      // Apply client-side filters
+      // Apply client-side filters - filter ALL tickets of that status
       if (filters?.status && filters.status !== 'all') {
         filtered = filtered.filter(t => t.status === filters.status);
       }
@@ -131,6 +131,7 @@ export const ticketApi = {
         tickets_id: input.tickets_id,
         title: input.title,
         description: input.description,
+        status: input.status,
         category: input.category,
         priority: input.priority,
         requester_name: input.requester_name,

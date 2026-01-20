@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Edit2, Trash2, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Eye, ArrowUp, ArrowDown } from 'lucide-react';
 import { ticketApi } from '@/services/api';
 import { Ticket, TicketFilters, TicketStatus, TicketPriority } from '@/types/ticket';
 import { useDebounce, formatDate } from '@/lib/utils';
@@ -133,7 +133,7 @@ export default function TicketList() {
               {loading ? 'Carregando...' : `${total} chamado${total !== 1 ? 's' : ''}`}
             </p>
           </div>
-          <Button onClick={() => navigate('/create')} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+          <Button onClick={() => navigate('/create')} className="gap-2">
             <Plus className="w-4 h-4" />
             Novo Chamado
           </Button>
@@ -162,7 +162,7 @@ export default function TicketList() {
                   <SelectItem value="Aberto">Aberto</SelectItem>
                   <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                   <SelectItem value="Resolvido">Resolvido</SelectItem>
-                  <SelectItem value="Fechado">Fechado</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
                 </SelectContent>
               </Select>
               
@@ -175,7 +175,6 @@ export default function TicketList() {
                   <SelectItem value="Baixa">Baixa</SelectItem>
                   <SelectItem value="Media">Média</SelectItem>
                   <SelectItem value="Alta">Alta</SelectItem>
-                  <SelectItem value="Critica">Crítica</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -257,7 +256,7 @@ export default function TicketList() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => navigate(`/edit/${ticket.id}`)}
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                               >
                                 <Edit2 className="w-4 h-4" />
                               </Button>

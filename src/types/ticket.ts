@@ -1,6 +1,6 @@
-export type TicketStatus = 'Aberto' | 'Em Andamento' | 'Resolvido' | 'Fechado';
-export type TicketPriority = 'Baixa' | 'Media' | 'Alta' | 'Critica';
-export type TicketCategory = string;
+export type TicketStatus = 'Aberto' | 'Em Andamento' | 'Resolvido' | 'Cancelado';
+export type TicketPriority = 'Baixa' | 'Media' | 'Alta';
+export type TicketCategory = 'Acesso' | 'Hardware' | 'Software' | 'Rede' | 'Outros';
 
 export interface Ticket {
   id: string;
@@ -8,7 +8,7 @@ export interface Ticket {
   description: string;
   status: TicketStatus;
   priority: TicketPriority;
-  category: TicketCategory;
+  category: TicketCategory | string;
   requester_name?: string;
   requester_email?: string;
   createdAt: string;
@@ -20,7 +20,7 @@ export interface TicketCreateInput {
   description: string;
   status: TicketStatus;
   priority: TicketPriority;
-  category: TicketCategory;
+  category: TicketCategory | string;
   requester_name: string;
   requester_email: string;
 }
@@ -29,6 +29,7 @@ export interface TicketUpdateInput {
   tickets_id: number;
   title: string;
   description: string;
+  status: TicketStatus;
   category: string;
   priority: string;
   requester_name: string;
