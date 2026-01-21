@@ -2,6 +2,8 @@
 
 Sistema de gerenciamento de chamados técnicos desenvolvido em React com integração à API REST do Xano Pública.
 
+- **Aplicação HelpDesk**: https://central-helpdesk.lovable.app
+
 ## 📋 Visão Geral
 
 Este é um sistema completo de helpdesk que permite:
@@ -310,7 +312,6 @@ src/
 
 ---
 
-## 🔗 Links Úteis
+## 🔗 Link Útil
 
 - **Swagger**: https://x8ki-letl-twmt.n7.xano.io/api:KC4cuToL?token=3ImO6yX6Bummz4hFGzxgK5UoTKo#/tickets/Tickets%2Ftickets%7CGET (Não é necessário autentificação).
-- **View**: https://central-helpdesk.lovable.app
