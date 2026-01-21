@@ -1,6 +1,6 @@
 # Central de Chamados (Helpdesk)
 
-Sistema de gerenciamento de chamados técnicos desenvolvido em React com integração à API REST do Xano.
+Sistema de gerenciamento de chamados técnicos desenvolvido em React com integração à API REST do Xano Pública.
 
 ## 📋 Visão Geral
 
@@ -313,5 +313,5 @@ src/
 ## 🔗 Links Úteis
 
 - **Preview**: https://id-preview--da07978f-88db-4682-8a04-4f4c2d06e4d1.lovable.app
-- **Swagger**: https://x8ki-letl-twmt.n7.xano.io/api:KC4cuToL?token=3ImO6yX6Bummz4hFGzxgK5UoTKo#/tickets/Tickets%2Ftickets%7CGET
+- **Swagger**: https://x8ki-letl-twmt.n7.xano.io/api:KC4cuToL?token=3ImO6yX6Bummz4hFGzxgK5UoTKo#/tickets/Tickets%2Ftickets%7CGET (Não é necessário autentificação).
 - **Produção**: https://central-helpdesk.lovable.app
